@@ -1,0 +1,11 @@
+# Hệ điều hành và trình soạn thảo
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# File tạm
+*.log
+*.bak
+node_modules/
