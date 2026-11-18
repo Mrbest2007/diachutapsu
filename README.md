@@ -27,6 +27,10 @@ Nếu không vào được phòng (nhất là trên iPhone/iPad):
 3. Dùng nút **Kiểm tra mạng** trong hộp thoại hướng dẫn của game.
 4. Không có mạng hoặc cần chơi thử: dùng **Phòng giả lập** (chơi với Bot) hoặc **Chơi chung máy**.
 
+### Vào phòng không được trên Viettel / 4G / 5G
+Mạng di động và CGNAT thường dùng NAT đối xứng nên chỉ STUN là không đủ, cần **máy chủ TURN riêng** chạy được. Điền TURN của bạn trong `js/netconf.js` (`turn` hoặc `iceUrl`); hộp thoại **Kiểm tra mạng** trong game sẽ báo TURN đã hoạt động chưa. Để không phụ thuộc CDN, có thể đặt `peerjs.min.js` vào `js/vendor/` (game thử file này trước):
+`curl -L https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js -o js/vendor/peerjs.min.js`
+
 Ghi chú kỹ thuật cho Safari iOS: STUN Google/Cloudflare kèm TURN dự phòng, máy chủ PeerJS luôn dùng wss/https (cổng 443), tự nối lại và heartbeat khi rớt mạng, storage có bản dự phòng trên RAM khi Safari chặn localStorage.
 
 ## Đăng lên GitHub Pages
@@ -51,6 +55,7 @@ Ghi chú kỹ thuật cho Safari iOS: STUN Google/Cloudflare kèm TURN dự phò
 | `js/ui-menu.js` | Menu, cài đặt, phòng thay đồ, gacha |
 | `js/board.js` | Bàn cờ 3D |
 | `js/hud.js` | HUD và hộp thoại |
+| `js/netconf.js` | **Cấu hình mạng**: máy chủ báo hiệu, STUN, TURN |
 | `js/main.js` | Điều khiển, mạng online, khởi động |
 | `LICENSE` | Giấy phép MIT |
 | `.nojekyll` | Báo GitHub Pages phục vụ file nguyên bản |

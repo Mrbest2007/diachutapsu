@@ -20,17 +20,20 @@ const CODEA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
    - pingInterval: heartbeat WebSocket báo hiệu mỗi 4 giây để Safari không coi kết nối là nhàn rỗi */
 const NET_PREFIX='diachutapsu-';
 const secureUrl=u=>String(u).replace(/^http:\/\//i,'https://').replace(/^ws:\/\//i,'wss://');
-const PEER_OPTS={debug:0,host:'0.peerjs.com',port:443,path:'/',secure:true,pingInterval:4000,
- config:{iceTransportPolicy:'all',iceCandidatePoolSize:4,iceServers:[
- {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302','stun:stun.cloudflare.com:3478']},
- {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
-const newPeer=id=>id?new Peer(id,PEER_OPTS):new Peer(PEER_OPTS);
+const SIG=NET_CONF.signal;
+const LEGACY_TURN={urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'};
+const iceList=extra=>[{urls:NET_CONF.stun}].concat(extra||[],NET_CONF.turn.filter(t=>t&&t.urls),NET_CONF.legacyTurn?[LEGACY_TURN]:[]);
+const PEER_OPTS={debug:0,host:SIG.host,port:SIG.port,path:SIG.path,key:SIG.key,secure:true,pingInterval:4000,
+ config:{iceTransportPolicy:'all',iceCandidatePoolSize:4,iceServers:iceList()}};
+let ICE_STAT={host:0,srflx:0,relay:0}; /* kết quả thu thập ICE lần gần nhất: relay>0 nghĩa là TURN đang chạy */
+/* relay=true: ép đi qua TURN (dùng khi lần nối trực tiếp đã thất bại; chỉ bật được nếu TURN thực sự cấp được địa chỉ relay) */
+const newPeer=(id,relay)=>{const o=(relay&&ICE_STAT.relay)?Object.assign({},PEER_OPTS,{config:Object.assign({},PEER_OPTS.config,{iceTransportPolicy:'relay'})}):PEER_OPTS;return id?new Peer(id,o):new Peer(o)};
 const uerr=m=>Object.assign(new Error(m),{user:true});
 let NET_SEQ=0; /* tăng mỗi lần đóng/tạo kết nối mới để huỷ các thao tác chờ cũ */
 
 /* Tải PeerJS: thử nhiều CDN, 2 vòng (iOS hoặc mạng trường học đôi khi chặn một CDN) */
 function loadPeer(){
- const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js','https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js'].map(secureUrl);
+ const urls=['js/vendor/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js','https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js'].map(u=>/^https?:/.test(u)?secureUrl(u):u);
  const one=u=>new Promise((res,rej)=>{const x=document.createElement('script');x.src=u;x.async=true;const t=setTimeout(()=>{x.remove();rej(new Error('timeout'))},9000);x.onload=()=>{clearTimeout(t);res()};x.onerror=()=>{clearTimeout(t);x.remove();rej(new Error('load'))};document.head.appendChild(x)});
  return (async()=>{if(window.Peer)return;
   netMsg(L('Đang tải thư viện kết nối...','Loading connection library...'),'busy');
@@ -39,11 +42,17 @@ function loadPeer(){
 
 /* Chờ thu thập đủ ICE candidates (tối đa ms) trước khi gửi tín hiệu kết nối.
    Chạy một RTCPeerConnection "khởi động" để STUN/TURN được phân giải sẵn; PeerJS sau đó dùng candidate pool đã gom. */
-let ICE_WARM=0;
+let ICE_WARM=0,ICE_EXP=0;
+/* Lấy TURN có thời hạn từ NET_CONF.iceUrl (nếu có). Lỗi/timeout 5s thì bỏ qua, dùng danh sách tĩnh. Làm mới sau 30 phút. */
+async function loadIce(){if(!NET_CONF.iceUrl||Date.now()<ICE_EXP)return;
+ try{const c=new AbortController(),t=setTimeout(()=>c.abort(),5000);
+  const r=await fetch(NET_CONF.iceUrl,{cache:'no-store',signal:c.signal});clearTimeout(t);if(!r.ok)return;
+  let j=await r.json();if(!Array.isArray(j))j=j&&j.iceServers;j=(j||[]).filter(x=>x&&x.urls);
+  if(j.length){PEER_OPTS.config.iceServers=iceList(j);ICE_EXP=Date.now()+30*60000;ICE_WARM=0}}catch(e){}}
 function warmIce(ms){return new Promise(res=>{
  if(ICE_WARM||!window.RTCPeerConnection)return res(null);
  let pc=null,fin=false;const got={host:0,srflx:0,relay:0};let to=0;
- const done=()=>{if(fin)return;fin=true;clearTimeout(to);try{pc&&pc.close()}catch(e){}if(got.host||got.srflx||got.relay)ICE_WARM=1;res(got)};
+ const done=()=>{if(fin)return;fin=true;clearTimeout(to);try{pc&&pc.close()}catch(e){}if(got.host||got.srflx||got.relay)ICE_WARM=1;ICE_STAT=got;res(got)};
  to=setTimeout(done,ms||3000);
  try{pc=new RTCPeerConnection(PEER_OPTS.config);pc.createDataChannel('w');
   pc.onicegatheringstatechange=()=>{if(pc&&pc.iceGatheringState==='complete')done()};
@@ -123,13 +132,14 @@ function diagIce(){return new Promise(res=>{if(!window.RTCPeerConnection)return 
  try{pc.createDataChannel('t')}catch(e){}
  pc.onicecandidate=e=>{if(!e.candidate)return done();const m=/ typ (host|srflx|prflx|relay)/.exec(e.candidate.candidate);if(m)o[m[1]==='prflx'?'srflx':m[1]]++};
  pc.createOffer().then(x=>pc.setLocalDescription(x)).catch(done)})}
-async function runDiag(){if(!MD||MD.type!=='p2phelp')return;MD.data.diag=L('Đang kiểm tra...','Testing...');renderModal();const ln=[];
- try{const c=new AbortController(),t=setTimeout(()=>c.abort(),6000);await fetch('https://0.peerjs.com/peerjs/id',{cache:'no-store',mode:'no-cors',signal:c.signal});clearTimeout(t);ln.push('✅ '+L('Máy chủ ghép phòng: truy cập được','Matchmaking server: reachable'))}
+async function runDiag(){if(!MD||MD.type!=='p2phelp')return;MD.data.diag=L('Đang kiểm tra...','Testing...');renderModal();const ln=[];await loadIce();
+ try{const c=new AbortController(),t=setTimeout(()=>c.abort(),6000);await fetch('https://'+SIG.host+(SIG.port===443?'':':'+SIG.port)+SIG.path+SIG.key+'/id',{cache:'no-store',mode:'no-cors',signal:c.signal});clearTimeout(t);ln.push('✅ '+L('Máy chủ ghép phòng: truy cập được','Matchmaking server: reachable'))}
  catch(e){ln.push('❌ '+L('Máy chủ ghép phòng: không truy cập được','Matchmaking server: unreachable'))}
  const o=await diagIce();
  if(o.err)ln.push('❌ '+o.err);
  else{ln.push((o.srflx?'✅ ':'❌ ')+L('STUN (xuyên NAT): ','STUN (NAT traversal): ')+(o.srflx?L('hoạt động','working'):L('không phản hồi','no response')));
-  ln.push((o.relay?'✅ ':'⚠️ ')+L('TURN (chuyển tiếp dự phòng): ','TURN (relay fallback): ')+(o.relay?L('hoạt động','working'):L('không phản hồi','no response')));
+  ln.push((o.relay?'✅ ':'❌ ')+L('TURN (chuyển tiếp dự phòng): ','TURN (relay fallback): ')+(o.relay?L('hoạt động','working'):L('không phản hồi','no response')));
+  if(!o.relay)ln.push(L('⚠️ Không có TURN: mạng di động/CGNAT (vd. Viettel) sẽ khó vào phòng. Chủ game cần cấu hình TURN trong js/netconf.js.','⚠️ No TURN: mobile/CGNAT networks will struggle. The game owner must configure TURN in js/netconf.js.'));
   ln.push(o.srflx||o.relay?L('👉 P2P có thể hoạt động. Nếu vẫn lỗi, hãy thử đổi mạng.','👉 P2P should work. If it still fails, try another network.'):L('👉 Mạng đang chặn P2P: hãy tắt Private Relay/VPN hoặc đổi mạng.','👉 Your network blocks P2P: turn off Private Relay/VPN or switch networks.'))}
  if(MD&&MD.type==='p2phelp'){MD.data.diag=ln.join('\n');renderModal()}}
 function netClose(){NET_SEQ++;wakeOff();statShow('');voiceAll();CHAT.log=[];CHAT.unread=0;chatToggle(false);const n=ST.net;if(!n)return;ST.net=null;
@@ -249,7 +259,8 @@ async function hostRoom(){ST.lastNet='host';if(ST.net)netClose();const my=++NET_
  try{await loadPeer()}catch(e){return netFail(e)}
  if(my!==NET_SEQ)return;
  netMsg(L('Đang thu thập ICE...','Gathering ICE candidates...'),'busy');
- await warmIce(3000);if(my!==NET_SEQ)return;
+ await loadIce();if(my!==NET_SEQ)return;
+ await warmIce(4500);if(my!==NET_SEQ)return;
  netMsg(L('Đang kết nối máy chủ...','Connecting to server...'),'busy');
  let tries=0;
  const make=()=>{const code=genCode();let peer;try{peer=newPeer(NET_PREFIX+code)}catch(e){return netFail(e)}
@@ -296,7 +307,8 @@ async function joinRoom(){const code=($('#joinCode').value||'').toUpperCase().re
  try{await loadPeer()}catch(e){return netFail(e)}
  if(my!==NET_SEQ)return;
  netMsg(L('Đang thu thập ICE...','Gathering ICE candidates...'),'busy');
- await warmIce(3000);if(my!==NET_SEQ)return;
+ await loadIce();if(my!==NET_SEQ)return;
+ await warmIce(4500);if(my!==NET_SEQ)return;
  const net={role:'guest',code,peer:null,conn:null,list:[],opened:false,inGame:false,seat:null,token:null,hostLeft:false,linking:false,cid:Math.random().toString(36).slice(2,10)};
  ST.net=net;guestLink(net,false)}
 /* Nối tới phòng: thử tối đa 3 lần khi vào phòng, 8 lần khi tự nối lại; mỗi lần dùng Peer mới.
@@ -308,7 +320,7 @@ function guestLink(net,recover){
   if(recover){toast(L('Mất kết nối với phòng','Lost connection to the room'));leave()}else netFail(err||uerr(P2P_ERR),code)};
  const attempt=n=>{if(ST.net!==net||net.hostLeft)return;
   net.conn=null;try{net.peer&&net.peer.destroy()}catch(e){}
-  let peer;try{peer=newPeer()}catch(e){return fail(e)}
+  const relay=n>=2&&ICE_STAT.relay>0;let peer;try{peer=newPeer(null,relay)}catch(e){return fail(e)}
   net.peer=peer;keepPeerAlive(peer,net);peer.on('call',call=>voiceIncoming(net,call));let done=false,tmo=0,first=true;
   const retry=err=>{if(done||net.opened||ST.net!==net)return;done=true;clearTimeout(tmo);
    if(n<MAX){netMsg((recover?L('Mất kết nối, đang nối lại... ','Connection lost, reconnecting... '):L('Đang kết nối máy chủ... ','Connecting to server... '))+'('+(n+1)+'/'+MAX+')','busy');setTimeout(()=>attempt(n+1),recover?Math.min(800*n,4000):600)}
@@ -317,10 +329,10 @@ function guestLink(net,recover){
   peer.on('error',e=>{if(e&&e.type==='peer-unavailable'){if(n<(recover?MAX:2))retry(e);else{done=true;clearTimeout(tmo);fail(e)}}else retry(e)});
   peer.on('open',()=>{if(!first)return;first=false; /* 'open' có thể bắn lại khi nối lại tín hiệu: chỉ xử lý lần đầu */
    if(ST.net!==net||done)return;clearTimeout(tmo);
-   netMsg(L('Đang tìm phòng ','Looking for room ')+code+'...'+(n>1?' ('+n+'/'+MAX+')':''),'busy');
+   netMsg(L('Đang tìm phòng ','Looking for room ')+code+'...'+(n>1?' ('+n+'/'+MAX+')':'')+(relay?L(' · qua máy chủ chuyển tiếp',' · via relay'):''),'busy');
    const c=peer.connect(NET_PREFIX+code,{serialization:'json',reliable:true});net.conn=c;
    bindGuest(net,c,{recover,resume,retry,done:()=>done,stop:()=>clearTimeout(tmo)});
-   tmo=setTimeout(()=>retry(),12000)})};
+   tmo=setTimeout(()=>retry(),18000)})};
  attempt(1)}
 function bindGuest(net,c,x){const code=net.code;
  c.on('iceStateChanged',st=>{if(st==='failed'&&!net.opened)x.retry(uerr(NET_BLOCKED))});
