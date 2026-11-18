@@ -6,6 +6,7 @@ Game cờ tỉ phú phong cách Pastel Chibi 3D, chạy trực tiếp trên trì
 - Chơi với Bot (1–3 Bot, 3 mức độ)
 - Chơi chung máy (2–4 người)
 - Chơi Online qua mã phòng 5 ký tự (WebRTC / PeerJS, kết nối ngang hàng)
+- Khung chat phòng (💬) + câu chào nhanh (Chào!, Nhanh lên nào, Giao dịch không?, GG); tin nhắn hiện thành bong bóng trên đầu nhân vật, tối ưu cho điện thoại
 - Chat giọng nói: nút 🎤 Micro ở phòng chờ và trong ván (cần HTTPS và cấp quyền micro); người đang bật mic có biểu tượng 🎙️ cạnh tên
 
 ## Chạy thử
