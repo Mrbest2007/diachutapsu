@@ -456,6 +456,70 @@ html[lang=en] .mort::before{content:'MORTGAGED'}
 .pf-av{flex:none;display:grid;place-items:center;min-width:110px}
 .pf-f{flex:1;min-width:230px;display:flex;flex-direction:column;gap:8px}
 .pf-f input{max-width:260px}
+
+/* ===== v9: giao diện di động, vừa đúng 1 màn hình ===== */
+.tic{display:none}.tic.keep{display:inline}
+.mtools{display:none}
+.popup{position:fixed;inset:0;z-index:40}
+.popup[hidden]{display:none}
+body:not(.ingame) .popup{display:none}
+.pbk{position:absolute;inset:0;background:rgba(70,40,120,.22)}
+.ppan{position:absolute;left:8px;right:8px;bottom:var(--pb,170px);max-width:420px;margin:0 auto;padding:12px;border-radius:22px;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1.5px solid var(--line);box-shadow:0 18px 44px rgba(100,60,170,.4);animation:ppIn .22s cubic-bezier(.2,1.4,.4,1)}
+.ppan h4{margin:0 0 8px;font:800 14px var(--disp);color:var(--tx)}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:68px;padding:6px 2px;border:0;border-radius:18px;background:#fff;color:var(--tx);box-shadow:inset 0 0 0 1.5px var(--line),0 4px 10px rgba(150,110,210,.25);touch-action:manipulation}
+.pb:active{transform:scale(.93)}
+.pb .pe{font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center}
+.pb small{font:700 11px var(--body);color:var(--mut)}
+.prow2{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.prow2:last-child{margin:10px 0 0}
+@keyframes ppIn{from{transform:translateY(14px) scale(.94);opacity:0}}
+@media(min-width:701px){.popup{display:none!important}}
+@media(max-width:700px){
+ body{padding-block:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-bottom,0px));padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}
+ body.ingame{height:100vh;height:100dvh;min-height:0;overflow:hidden}
+ button{touch-action:manipulation}
+ #game.on{height:calc(100vh - 8px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));height:calc(100dvh - 8px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));grid-template-columns:1fr 1fr;grid-template-areas:"top top" "l r" "stage stage" "dock dock";grid-template-rows:auto auto minmax(0,1fr) auto;gap:5px;align-items:stretch}
+ #top{gap:5px;min-width:0}
+ #top .tt{font-size:15px;white-space:nowrap}
+ #top .chip{font-size:11px;padding:.25em .6em;white-space:nowrap}
+ #top .btn.sm{padding:.3em .6em;font-size:13px;min-width:34px;min-height:30px}
+ #top .tic{display:inline}#top .lb{display:none}
+ #top .pill{font-size:11px;padding:.3em .6em}
+ #pl,#pr{flex-direction:row;gap:4px;min-width:0;overflow:visible}
+ .pc{flex:1 1 0;min-width:0;padding:4px 5px;border-radius:12px}
+ .pc.turn{box-shadow:0 0 0 2px var(--pcol),0 0 10px var(--pcol)}
+ .pc .hd{gap:4px}
+ .pc .avw{width:30px;height:36px;border-radius:9px;box-shadow:inset 0 0 0 1.5px var(--pcol)}
+ .pc .avw svg{width:100%;height:auto}
+ .pc .nmx{font-size:11px}
+ .pc .tag,.pc .jc{display:none}
+ .pc .mn{font-size:12.5px;display:flex;gap:4px;align-items:baseline;white-space:nowrap}
+ .pc.jail::after{content:'🔒';position:absolute;right:3px;top:1px;font-size:11px;line-height:1}
+ .pp{gap:2px;margin-top:3px;max-height:16px;overflow:hidden}
+ .pp button{width:7px;height:7px;border-radius:2px;box-shadow:none;pointer-events:none;font-size:0}
+ .pp .tag{display:none}
+ #stage{overflow:hidden;min-height:0;justify-content:center;align-items:center;gap:0}
+ #stage .view{display:none}
+ .scene{touch-action:none;margin:0 auto}
+ .plane{font-size:calc(var(--bs)*.0135)}
+ .nm{padding:.05em .1em;word-break:normal;overflow-wrap:anywhere}
+ .ic{font-size:1.5em;margin:0}
+ .tile .ic[style]{font-size:1.45em!important}
+ #dock{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px;padding:8px;margin:0;border-radius:18px}
+ #dock .st,#dock .acts,#dock .mtools{flex:none}
+ #dock .st{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;line-height:1.2;min-height:2.4em}
+ #dock .st b{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ #dock .st .mut{flex:none;font-size:12px!important}
+ #dock .acts{display:flex;flex-wrap:wrap;gap:6px}
+ #dock .acts:empty{display:none}
+ #dock .acts .btn{flex:1 1 0;min-width:0;padding:.55em .4em;font-size:13px;min-height:44px;border-radius:13px;white-space:normal;line-height:1.15}
+ #dock .acts .btn.big{flex:1.5 1 0;font-size:15px}
+ #dock .dsk{display:none!important}
+ #dock .mtools{display:flex;gap:6px}
+ #dock .mtools .btn{flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;gap:6px}
+ #dock .mtools .ei{font-size:18px;line-height:1}
+}
 </style></head><body>
 <canvas id="bg"></canvas>
 <div id="app">
@@ -1413,6 +1477,7 @@ const SCENERY=`<svg class="scenery" viewBox="0 0 400 400" preserveAspectRatio="x
 <g><path d="M120 258 q8 -22 22 0z" fill="#ffd9e8"/><rect x="127" y="248" width="8" height="10" fill="#fff"/><path d="M262 250 l8 -16 l8 16z" fill="#ff9aa8"/><rect x="264" y="250" width="12" height="9" fill="#fff0c8"/></g>
 <path d="M0 22 Q100 52 200 22 T400 22" fill="none" stroke="#ffb8d6" stroke-width="2"/><g fill="#ff6f8c"><circle cx="50" cy="38" r="6"/><circle cx="130" cy="48" r="6"/><circle cx="270" cy="48" r="6"/><circle cx="350" cy="38" r="6"/></g><g fill="#ffd166"><circle cx="90" cy="46" r="5"/><circle cx="200" cy="34" r="5"/><circle cx="310" cy="46" r="5"/></g></svg>`;
 function buildBoard(){
+ if(MOB()&&!VW.mset){VW.mset=1;VW.tilt=14;VW.rot=0}
  $('#stage').innerHTML=`<div class="view"><label for="vTilt">Nghiêng</label><input type="range" id="vTilt" min="0" max="70" value="${VW.tilt}"><label for="vRot">Xoay</label><input type="range" id="vRot" min="-180" max="180" value="${VW.rot}"><button class="btn sm ghost" data-a="viewTop">Từ trên</button><button class="btn sm ghost" data-a="viewIso">3D</button><label for="vZoom">Thu phóng</label><input type="range" id="vZoom" min="80" max="140" value="${Math.round(VW.zoom*100)}"><span id="zoomv" style="min-width:3em">${Math.round(VW.zoom*100)}%</span><span class="mut">Kéo để xoay · lăn chuột để zoom</span></div>
  <div class="scene" id="scene"><div class="b3d" id="b3d"><div class="plane" id="plane">${T.map((_,i)=>tileHTML(i)).join('')}
  <div class="center">${SCENERY}<div class="logo">ĐỊA CHỦ<br>TẬP SỰ<small>VIỆT NAM · PASTEL CHIBI</small></div>
@@ -1448,6 +1513,9 @@ function setupScene(){const sc=$('#scene');let d=null;
  sc.addEventListener('wheel',e=>{e.preventDefault();VW.zoom=Math.max(.8,Math.min(1.4,VW.zoom-e.deltaY*.001));fitBoard()},{passive:false})}
 function fitBoard(){const st=$('#stage');if(!st||!G)return;const w=st.clientWidth||innerWidth-32;
  const t=34*Math.PI/180,P=2.1,e=.5,sn=Math.sin(t),hf=Math.cos(t)*e*(P/(P-e*sn)+P/(P+e*sn))+.08;
+ if(MOB()){const hh=st.clientHeight;let b=Math.min(w*.97,innerWidth*.94,420);
+  for(let k=0;k<6&&hh>120;k++){BSZ=b;const g=viewGeom(b),sh=g.yt+g.yb+54;if(sh<=hh)break;b*=hh/sh}
+  BSZ=Math.max(230,b*VW.zoom);document.documentElement.style.setProperty('--bs',BSZ.toFixed(1)+'px');applyView();return}
  const desk=innerWidth>980,base=desk?Math.max(380,Math.min(w*.98,(innerHeight-190)/.93,900)):Math.min(w*.98,880);BSZ=Math.max(300,base*VW.zoom);
  document.documentElement.style.setProperty('--bs',BSZ.toFixed(1)+'px');applyView()}
 addEventListener('resize',()=>{if(G)fitBoard()});
@@ -1586,16 +1654,16 @@ function lvTag(p){return p.bot?`<span class="tag">Bot · ${LVN[p.bot]}</span>`:(
 function playerCard(p){const own=owned(p.id);
  const chips=own.map(i=>{const t=T[i],c=t.g?GROUPS[t.g].c:t.t==='rr'?'#9fb4ff':'#5eead4';const h=G.hs[i];
   return `<button class="${G.mort[i]?'m':''}" style="background:${c}" data-a="deed" data-i="${i}" title="${t.n}">${h?`<i>${h===5?'KS':h}</i>`:''}</button>`}).join('');
- return `<div class="pc ${p.id===G.cur&&G.winner<0?'turn':''} ${p.out?'out':''}" style="--pcol:${p.col}"><div class="hd"><div class="avw">${avatar(p.cfg,44)}</div><div style="min-width:0;flex:1"><div class="nmx">${esc(p.name)}</div>${lvTag(p)}<div class="mn">${money(p.money)}</div></div></div>
+ return `<div class="pc ${p.id===G.cur&&G.winner<0?'turn':''} ${p.out?'out':''} ${p.jail?'jail':''}" style="--pcol:${p.col}"><div class="hd"><div class="avw">${avatar(p.cfg,44)}</div><div style="min-width:0;flex:1"><div class="nmx">${esc(p.name)}</div>${lvTag(p)}<div class="mn">${money(p.money)}</div></div></div>
  ${p.out?'<div class="jc" style="color:var(--red)">Đã phá sản</div>':''}${p.jail?'<div class="jc" style="color:var(--gold)">Đang ở tù (lần '+p.jt+'/3)</div>':''}${p.fc.length?`<div class="jc">Thẻ ra tù ×${p.fc.length}</div>`:''}
  <div class="pp">${chips||'<span class="tag">Chưa có tài sản</span>'}</div></div>`}
 let PSIG='';
 function renderPlayers(){const sig=G.players.map(p=>[p.money,p.jail,p.jt,p.out,p.fc.length,p.bot,p.id===G.cur&&G.winner<0].join()).join('|')+G.own.join()+G.hs.join()+G.mort.join();if(sig===PSIG&&$('#pl').firstChild)return;PSIG=sig;const n=G.players.length,h=Math.ceil(n/2);
  $('#pl').innerHTML=G.players.slice(0,h).map(playerCard).join('');$('#pr').innerHTML=G.players.slice(h).map(playerCard).join('')}
-function renderTop(){$('#top').innerHTML=`<div class="tt">Địa Chủ Tập Sự</div><span class="chip">Lượt ${G.turnNo}</span>${ST.net?`<span class="chip">Phòng ${ST.net.code}</span>`:''}<button class="btn sm gold" data-a="rules" aria-label="Luật chơi" title="Luật chơi">📖 Luật chơi</button><button class="btn sm ghost" data-a="mute">${AUD.muted?'Âm thanh: Tắt':'Âm thanh: Bật'}</button><button class="btn sm ghost" data-a="quit">Thoát</button><span class="row" style="gap:6px">${langChips()}</span>`}
+function renderTop(){$('#top').innerHTML=`<div class="tt">Địa Chủ Tập Sự</div><span class="chip">Lượt ${G.turnNo}</span>${ST.net?`<span class="chip">Phòng ${ST.net.code}</span>`:''}<button class="btn sm gold" data-a="rules" aria-label="Luật chơi" title="Luật chơi"><span class="tic keep" aria-hidden="true">📖</span><span class="lb">Luật chơi</span></button><button class="btn sm ghost" data-a="mute" aria-label="Âm thanh"><span class="tic" aria-hidden="true">${AUD.muted?'🔇':'🔊'}</span><span class="lb">${AUD.muted?'Âm thanh: Tắt':'Âm thanh: Bật'}</span></button><button class="btn sm ghost" data-a="quit" aria-label="Thoát"><span class="tic" aria-hidden="true">✕</span><span class="lb">Thoát</span></button><span class="row" style="gap:6px">${langChips()}</span>`}
 function renderDock(){const d=$('#dock');
  const logs=G.log.slice(-40).reverse().map(l=>`<div><span style="color:${l.c>=0?G.players[l.c].col:'#fff'}">●</span> ${esc(l.t)}</div>`).join('');
- if(G.winner>=0){d.innerHTML=`<div class="st"><b>Trận đấu kết thúc</b></div><div class="logbox" style="flex:1 1 300px">${logs}</div>`;return}
+ if(G.winner>=0){d.innerHTML=`<div class="st"><b>Trận đấu kết thúc</b></div><div class="logbox dsk" style="flex:1 1 300px">${logs}</div>`;renderPopup();return}
  const p=cp(),mine=isMine(G.cur)&&!p.bot,dis=busy()?'disabled':'';let st='',acts='';const T0=T[p.pos];
  const mg=`<button class="btn" data-a="manage" ${dis}>Quản lý tài sản</button>`;
  const tr=`<button class="btn" data-a="tradeNew" ${dis}>Giao dịch</button>`;
@@ -1610,12 +1678,25 @@ function renderDock(){const d=$('#dock');
   default:st='…'}
  if(G.trade&&G.phase!=='auction'){const a=G.players[G.trade.from],b=G.players[G.trade.to];st=`${a.name} đề nghị giao dịch với ${b.name}`;acts=isMine(G.trade.from)&&!a.bot?`<button class="btn" data-a="tradeCancel">Hủy đề nghị</button>`:''}
  if(!mine&&!acts&&!G.trade)st+=p.bot?' · Bot đang suy nghĩ…':(ST.net?' · Đang chờ đối thủ…':'');
- const emo=`<div class="emotes" role="group" aria-label="Biểu cảm"><span class="tag">Biểu cảm</span>${EMO.map((x,i)=>`<button class="em" data-a="emote" data-v="${i}" aria-label="${x[1]}" title="${x[1]}">${x[0]}</button>`).join('')}</div>`;
+ const emo=`<div class="emotes dsk" role="group" aria-label="Biểu cảm"><span class="tag">Biểu cảm</span>${EMO.map((x,i)=>`<button class="em" data-a="emote" data-v="${i}" aria-label="${x[1]}" title="${x[1]}">${x[0]}</button>`).join('')}</div>`;
  const meP=ST.myIds.includes(G.cur)&&!G.players[G.cur].bot?G.cur:ST.myIds[0],tgs=G.players.filter(q=>!q.out&&q.id!==meP);if(!tgs.some(q=>q.id===ST.tgt))ST.tgt=tgs[0]?tgs[0].id:-1;
- const thr=tgs.length?`<div class="emotes thr" role="group" aria-label="Ném đồ"><span class="tag">Ném đồ</span>${THR.map((x,i)=>`<button class="em" data-a="throw" data-v="${i}" aria-label="${x.n}" title="${x.n}">${THR_IC[i]}</button>`).join('')}${tgs.length>1?`<div class="row" style="gap:4px;width:100%">${tgs.map(q=>`<button class="chip ${q.id===ST.tgt?'on':''}" style="font-size:12px;padding:.15em .6em" data-a="tgt" data-v="${q.id}">${esc(q.name)}</button>`).join('')}</div>`:''}</div>`:'';
- const chat=ST.net?`<div class="row" style="width:100%">${['Chào!','Nhanh lên nào','Giao dịch không?','GG'].map(t=>`<button class="chip" data-a="chat" data-v="${t}">${t}</button>`).join('')}</div>`:'';
- d.innerHTML=`<div class="st"><b style="color:${p.col}">${esc(st)}</b><div class="mut" style="font-size:13px">${G.last.d1} + ${G.last.d2} = ${G.last.d1+G.last.d2}</div></div><div class="acts">${acts}</div>${emo}${thr}${chat}<div class="logbox" style="flex:1 1 100%;max-height:96px">${logs}</div>`}
-function renderAll(){if(!G||!$('#game').classList.contains('on'))return;renderTop();renderPlayers();renderDock();updateBoard();renderTokens();renderModal()}
+ const thr=tgs.length?`<div class="emotes thr dsk" role="group" aria-label="Ném đồ"><span class="tag">Ném đồ</span>${THR.map((x,i)=>`<button class="em" data-a="throw" data-v="${i}" aria-label="${x.n}" title="${x.n}">${THR_IC[i]}</button>`).join('')}${tgs.length>1?`<div class="row" style="gap:4px;width:100%">${tgs.map(q=>`<button class="chip ${q.id===ST.tgt?'on':''}" style="font-size:12px;padding:.15em .6em" data-a="tgt" data-v="${q.id}">${esc(q.name)}</button>`).join('')}</div>`:''}</div>`:'';
+ const mt=`<div class="mtools"><button class="btn sm ghost" data-a="pop" data-v="emo"><span class="ei" aria-hidden="true">😂</span><span>Biểu cảm</span></button>${tgs.length?`<button class="btn sm ghost" data-a="pop" data-v="thr"><span class="ei" aria-hidden="true">🍅</span><span>Ném đồ</span></button>`:''}</div>`;
+ const chat=ST.net?`<div class="row dsk" style="width:100%">${['Chào!','Nhanh lên nào','Giao dịch không?','GG'].map(t=>`<button class="chip" data-a="chat" data-v="${t}">${t}</button>`).join('')}</div>`:'';
+ d.innerHTML=`<div class="st"><b style="color:${p.col}">${esc(st)}</b><div class="mut" style="font-size:13px">${G.last.d1} + ${G.last.d2} = ${G.last.d1+G.last.d2}</div></div><div class="acts">${acts}</div>${mt}${emo}${thr}${chat}<div class="logbox dsk" style="flex:1 1 100%;max-height:96px">${logs}</div>`;renderPopup()}
+const MOB=()=>innerWidth<=700;
+function throwTargets(){const meP=ST.myIds.includes(G.cur)&&!G.players[G.cur].bot?G.cur:ST.myIds[0];return G.players.filter(q=>!q.out&&q.id!==meP)}
+function closePop(){if(ST.pop){ST.pop=null;renderPopup()}}
+function renderPopup(){let el=$('#popup');if(!el){el=document.createElement('div');el.id='popup';el.className='popup';el.hidden=true;document.body.appendChild(el)}
+ if(!ST.pop||!G||G.winner>=0||MD||!$('#game').classList.contains('on')){el.hidden=true;el.innerHTML='';if(!G||G.winner>=0)ST.pop=null;return}
+ let h='';
+ if(ST.pop==='emo'){h=`<h4>Biểu cảm</h4><div class="pgrid">${EMO.map((x,i)=>`<button class="pb" data-a="emote" data-v="${i}" aria-label="${x[1]}"><span class="pe" aria-hidden="true">${x[0]}</span><small>${x[1]}</small></button>`).join('')}</div>${ST.net?`<div class="prow2">${['Chào!','Nhanh lên nào','Giao dịch không?','GG'].map(t=>`<button class="chip" data-a="chat" data-v="${t}">${t}</button>`).join('')}</div>`:''}`}
+ else{const tg=throwTargets();if(!tg.length){ST.pop=null;el.hidden=true;return}if(!tg.some(q=>q.id===ST.tgt))ST.tgt=tg[0].id;
+  h=`<h4>Ném đồ</h4>${tg.length>1?`<div class="prow2">${tg.map(q=>`<button class="chip ${q.id===ST.tgt?'on':''}" data-a="tgt" data-v="${q.id}">${esc(q.name)}</button>`).join('')}</div>`:''}<div class="pgrid">${THR.map((x,i)=>`<button class="pb" data-a="throw" data-v="${i}" aria-label="${x.n}"><span class="pe" aria-hidden="true">${THR_IC[i]}</span><small>${x.n}</small></button>`).join('')}</div>`}
+ el.innerHTML=`<div class="pbk" data-a="popClose"></div><div class="ppan" role="dialog">${h}</div>`;
+ el.style.setProperty('--pb',Math.max(60,innerHeight-$('#dock').getBoundingClientRect().top+8)+'px');el.hidden=false}
+let STH=0;
+function renderAll(){if(!G||!$('#game').classList.contains('on'))return;renderTop();renderPlayers();renderDock();updateBoard();renderTokens();renderModal();if(MOB()){const h=$('#stage').clientHeight;if(h&&Math.abs(h-STH)>2){STH=h;fitBoard()}}}
 function afterChange(){enqueueFx();renderAll();if(ST.net&&ST.net.role==='host')netBroadcast()}
 hookSync=afterChange;
 
@@ -1824,8 +1905,8 @@ const H={
  tradeCancel(){doAct('tradeCancel')},tradeYes(){doAct('tradeResp',true);closeModal()},tradeNo(){doAct('tradeResp',false);closeModal()},
  quit(){openModal('quit')},quitYes(){leave()},
  again(){if(ST.net)return leave();if(ST.mode==='local')H.startLocal();else H.startSolo()},
- emote(d){doEmote(+d.v)},throw(d){doThrow(+d.v)},tgt(d){ST.tgt=+d.v;if(G)renderDock()},
- chat(d){if(!ST.net)return;if(ST.net.role==='host')netChat(0,d.v);else ST.net.conn.send({t:'chat',text:d.v})},
+ emote(d){doEmote(+d.v);closePop()},throw(d){doThrow(+d.v);closePop()},pop(d){ST.pop=ST.pop===d.v?null:d.v;renderPopup()},popClose(){closePop()},tgt(d){ST.tgt=+d.v;if(G)renderDock()},
+ chat(d){if(!ST.net)return;if(ST.net.role==='host')netChat(0,d.v);else ST.net.conn.send({t:'chat',text:d.v});closePop()},
  viewTop(){VW.tilt=0;VW.rot=0;applyView()},viewIso(){VW.tilt=52;VW.rot=-45;applyView()},
  rules(){openModal('rules',{tab:0})},rulesTab(d){if(MD&&MD.type==='rules'){MD.data.tab=+d.v;renderModal()}},lang(d){setLang(d.v)},langToggle(){setLang(LANG==='vi'?'en':'vi')}};
 document.addEventListener('click',e=>{if(e.target.id==='ovm'&&MD&&!forced()){closeModal();return}
