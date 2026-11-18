@@ -1789,18 +1789,21 @@ function leave(){clearInterval(tickT);FX.stop();FX.P=[];netClose();G=null;Q=[];r
 
 /* ----- PeerJS ----- */
 const CODEA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-/* Cấu hình máy chủ PeerJS: kết nối bảo mật (wss/https) + STUN của Google + TURN dự phòng khi mạng chặn P2P */
+/* Cấu hình PeerJS theo bản Cờ Cá Ngựa Mèo chạy tốt trên iOS: máy chủ PeerJS Cloud mặc định (wss, cổng 443),
+   nhiều STUN + TURN công cộng (kể cả turns qua TLS) để qua được 4G/5G (CGNAT) và Wi-Fi khác mạng */
 const NET_PREFIX='diachutapsu-';
-const TURN_AUTH={username:'openrelayproject',credential:'openrelayproject'};
-const PEER_OPTS={host:'0.peerjs.com',port:443,path:'/',secure:true,debug:0,config:{iceCandidatePoolSize:4,iceServers:[
- {urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:stun2.l.google.com:19302'},
- Object.assign({urls:'turn:openrelay.metered.ca:80'},TURN_AUTH),
- Object.assign({urls:'turn:openrelay.metered.ca:443'},TURN_AUTH),
- Object.assign({urls:'turn:openrelay.metered.ca:443?transport=tcp'},TURN_AUTH)]}};
+const PEER_OPTS={debug:0,config:{iceCandidatePoolSize:4,iceServers:[
+ {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478']},
+ {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}};
 const newPeer=id=>id?new Peer(id,PEER_OPTS):new Peer(PEER_OPTS);
 const uerr=m=>Object.assign(new Error(m),{user:true});
-function loadPeer(){return new Promise((res,rej)=>{if(window.Peer)return res();const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
- const t=setTimeout(()=>rej(uerr('Không tải được thư viện kết nối (PeerJS). Kiểm tra mạng hoặc tắt trình chặn quảng cáo rồi thử lại.')),12000);s.onload=()=>{clearTimeout(t);window.Peer?res():rej(uerr('Không khởi tạo được thư viện kết nối (PeerJS).'))};s.onerror=()=>{clearTimeout(t);rej(uerr('Không tải được thư viện kết nối (PeerJS). Kiểm tra mạng hoặc tắt trình chặn quảng cáo rồi thử lại.'))};document.head.appendChild(s)})}
+/* Tải PeerJS: thử nhiều CDN (iOS hoặc mạng trường học đôi khi chặn một CDN) */
+function loadPeer(){const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'];
+ const one=u=>new Promise((res,rej)=>{const x=document.createElement('script');x.src=u;const t=setTimeout(()=>{x.remove();rej()},10000);x.onload=()=>{clearTimeout(t);res()};x.onerror=()=>{clearTimeout(t);x.remove();rej()};document.head.appendChild(x)});
+ return (async()=>{if(window.Peer)return;for(const u of urls){try{await one(u);if(window.Peer)return}catch(e){}}throw uerr('Không tải được thư viện kết nối (PeerJS). Kiểm tra mạng hoặc tắt trình chặn quảng cáo rồi thử lại.')})()}
+/* iOS tạm ngắt kết nối tín hiệu khi Safari xuống nền: tự nối lại khi quay lại */
+function keepPeerAlive(peer,net){peer.on('disconnected',()=>{setTimeout(()=>{try{if(ST.net===net&&!peer.destroyed)peer.reconnect()}catch(e){}},800)})}
+document.addEventListener('visibilitychange',()=>{const n=ST.net,p=n&&n.peer;if(!document.hidden&&p&&p.disconnected&&!p.destroyed){try{p.reconnect()}catch(e){}}});
 const NS={t:'',k:''};
 const NCOL={busy:'#7a62c9',ok:'#1f9d74',err:'#e8344f','':''};
 const netMsg=(t,k)=>{NS.t=t;NS.k=k||'';const e=$('#netmsg');if(e){e.textContent=t;e.style.color=NCOL[NS.k]||''}};
@@ -1861,50 +1864,62 @@ function renderLobby(){const n=ST.net;if(!n)return;const pf=pfActive();const l=l
  ${host?`<div class="grp"><b>Thêm Bot cho đủ bàn</b><div class="row">${[0,1,2].filter(k=>l.length+k<=4).map(k=>`<button class="chip ${Math.min(ST.online.extra,4-l.length)===k?'on':''}" data-a="onExtra" data-v="${k}">${k} Bot</button>`).join('')}${[1,2,3].map(k=>`<button class="chip ${ST.lvl===k?'on':''}" data-a="lvl2" data-v="${k}">${LVN[k]}</button>`).join('')}</div></div>
  <div class="row"><button class="btn gold big" data-a="startOnline" ${tot<2?'disabled':''}>Bắt đầu (${tot} người)</button></div>${n.sim?'<div class="row"><button class="btn ghost sm" data-a="hostRoom">Thử tạo phòng thật lại</button><button class="btn ghost sm" data-a="goLocal">Chơi chung máy</button></div>':''}`:'<div class="note">Đang chờ chủ phòng bắt đầu ván đấu…</div>'}</div>`;pfRestore(pf)}
 const genCode=()=>Array.from({length:5},()=>CODEA[rnd(CODEA.length)]).join('');
+function sanitizeRemote(c){const d=defCfg(),o=Object.assign({},d,c||{});o.name=String(o.name||'Khách').slice(0,14);if(!TYPES.some(t=>t[0]===o.type))o.type='meo';SLOTS.forEach(([s])=>{if(!ITEM[o[s]])o[s]=d[s]});return o}
 async function hostRoom(){ST.lastNet='host';if(ST.net)netClose();netMsg('Đang kết nối máy chủ...','busy');
  try{await loadPeer()}catch(e){return netFail(e)}
  let tries=0;
  const make=()=>{const code=genCode();let peer;try{peer=newPeer(NET_PREFIX+code)}catch(e){return netFail(e)}
-  const net={role:'host',code,peer,conns:[],list:null,ready:false};ST.net=net;
+  const net={role:'host',code,peer,conns:[],list:null,ready:false};ST.net=net;keepPeerAlive(peer,net);
   const to=setTimeout(()=>{if(ST.net===net&&!net.ready)netFail(uerr('Máy chủ kết nối không phản hồi. Kiểm tra mạng hoặc thử lại sau ít phút.'))},15000);
   peer.on('open',()=>{if(ST.net!==net)return;clearTimeout(to);net.ready=true;netMsg('Phòng đã sẵn sàng','ok');show('lobby');lobbySync()});
-  peer.on('disconnected',()=>{if(ST.net===net&&!peer.destroyed){netMsg('Mất kết nối máy chủ, đang kết nối lại...','busy');try{peer.reconnect()}catch(e){}}});
   peer.on('error',e=>{clearTimeout(to);if(ST.net!==net)return;
    if(e&&e.type==='unavailable-id'&&!net.ready&&++tries<6){try{peer.destroy()}catch(x){}ST.net=null;return make()}
    if(net.ready&&e&&(e.type==='webrtc'||e.type==='peer-unavailable'||e.type==='negotiation-failed')){toast('Một người chơi không kết nối được (mạng bị chặn P2P)');return}
    netFail(e,code)});
-  peer.on('connection',c=>{if(G||net.conns.length>=3){c.on('open',()=>{c.send({t:'full'});setTimeout(()=>c.close(),300)});return}
-   c.on('open',()=>{c.seat=net.conns.length+1;net.conns.push(c)});
-   c.on('iceStateChanged',st=>{if(st==='failed'&&!c.open)toast(NET_BLOCKED)});
-   c.on('data',m=>{if(!m)return;
-    if(m.t==='hello'){c.cfg=sanitizeRemote(m.cfg);lobbySync()}
-    else if(m.t==='act'&&G&&c.seat!=null&&(m.a==='emote'||m.a==='throw'||!busy()))act(c.seat,m.a,m.x);
-    else if(m.t==='chat'){netChat(c.seat,m.text)}});
+  peer.on('connection',c=>{
+   c.on('iceStateChanged',st=>{if(st==='failed'&&c.seat==null)toast(NET_BLOCKED)});
+   c.on('data',m=>{if(!m||!m.t)return;
+    if(m.t==='hello'){
+     if(c.seat==null){if(G||net.conns.length>=3){try{c.send({t:'full'})}catch(e){}setTimeout(()=>{try{c.close()}catch(e){}},300);return}
+      c.seat=net.conns.length+1;net.conns.push(c)}
+     c.cfg=sanitizeRemote(m.cfg);lobbySync()}
+    else if(c.seat==null)return;
+    else if(m.t==='act'&&G&&(m.a==='emote'||m.a==='throw'||!busy()))act(c.seat,m.a,m.x);
+    else if(m.t==='chat')netChat(c.seat,m.text)});
    c.on('close',()=>{const k=net.conns.indexOf(c);if(k<0)return;if(G){const p=G.players[c.seat];if(p){p.bot=2;log(p.id,`${p.name} mất kết nối, Bot tiếp quản`);afterChange()}}else{net.conns.splice(k,1);net.conns.forEach((q,i)=>q.seat=i+1);lobbySync()}})})};
  make()}
-function sanitizeRemote(c){const d=defCfg(),o=Object.assign({},d,c||{});o.name=String(o.name||'Khách').slice(0,14);if(!TYPES.some(t=>t[0]===o.type))o.type='meo';SLOTS.forEach(([s])=>{if(!ITEM[o[s]])o[s]=d[s]});return o}
 async function joinRoom(){const code=($('#joinCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
  if(code.length!==5)return netMsg('Hãy nhập đúng mã phòng 5 ký tự.','err');ST.lastNet='join';ST.lastCode=code;
+ try{$('#joinCode').blur()}catch(e){}
  if(ST.net)netClose();netMsg('Đang kết nối máy chủ...','busy');
  try{await loadPeer()}catch(e){return netFail(e)}
- let peer;try{peer=newPeer()}catch(e){return netFail(e)}
- const net={role:'guest',code,peer,conn:null,list:[],opened:false};ST.net=net;
- const to=setTimeout(()=>{if(ST.net===net&&!net.opened)netFail(uerr('Máy chủ kết nối không phản hồi. Kiểm tra mạng hoặc thử lại sau ít phút.'))},15000);
- peer.on('error',e=>{clearTimeout(to);clearTimeout(net.to2);if(ST.net!==net)return;netFail(e,code)});
- peer.on('disconnected',()=>{if(ST.net===net&&!peer.destroyed&&!net.opened){try{peer.reconnect()}catch(e){}}});
- peer.on('open',()=>{if(ST.net!==net)return;clearTimeout(to);netMsg('Đang tìm phòng '+code+'...','busy');
-  const c=peer.connect(NET_PREFIX+code,{reliable:true});net.conn=c;
-  net.to2=setTimeout(()=>{if(ST.net===net&&!net.opened)netFail(uerr('Không kết nối được tới phòng '+code+'. Mạng có thể đang chặn kết nối P2P (thử Wi-Fi/4G khác) hoặc chủ phòng đã thoát.'))},20000);
-  c.on('iceStateChanged',st=>{if(st==='failed'&&ST.net===net&&!net.opened){clearTimeout(net.to2);netFail(uerr(NET_BLOCKED))}});
-  c.on('error',e=>{if(ST.net===net&&!net.opened){clearTimeout(net.to2);netFail(e,code)}});
-  c.on('open',()=>{clearTimeout(net.to2);net.opened=true;c.send({t:'hello',cfg:ST.me});netMsg('Đã vào phòng '+code,'ok');show('lobby');renderLobby()});
-  c.on('data',m=>{if(!m)return;
-   if(m.t==='lobby'){net.list=m.list;renderLobby()}
-   else if(m.t==='full'){netFail(uerr('Phòng đã đầy hoặc ván đấu đã bắt đầu.'))}
-   else if(m.t==='start'){ST.myIds=[m.seat];G=m.G;rewarded=false;lastFx=0;Q=[];running=false;debtShown=null;closeModal();show('game');buildBoard();afterChange()}
-   else if(m.t==='state'){G=m.G;if($('#game').classList.contains('on'))afterChange()}
-   else if(m.t==='chat')netChatShow(m.seat,m.text)});
-  c.on('close',()=>{if(ST.net===net){if(!net.opened)return;toast('Chủ phòng đã thoát');leave()}})})}
+ const net={role:'guest',code,peer:null,conn:null,list:[],opened:false};ST.net=net;
+ const P2P_ERR='Không kết nối được tới phòng '+code+'. Mạng có thể đang chặn kết nối P2P (thử Wi-Fi/4G khác) hoặc chủ phòng đã thoát.';
+ /* thử tối đa 3 lần, mỗi lần tạo Peer mới (như Cờ Cá Ngựa Mèo) */
+ const attempt=n=>{if(ST.net!==net)return;
+  try{if(net.peer)net.peer.destroy()}catch(e){}
+  let peer;try{peer=newPeer()}catch(e){return netFail(e)}
+  net.peer=peer;keepPeerAlive(peer,net);let done=false,tmo=0;
+  const retry=(err)=>{if(done||net.opened||ST.net!==net)return;done=true;clearTimeout(tmo);
+   if(n<3){netMsg('Đang kết nối máy chủ... ('+(n+1)+'/3)','busy');setTimeout(()=>attempt(n+1),600)}
+   else netFail(err||uerr(P2P_ERR),code)};
+  tmo=setTimeout(()=>retry(uerr('Máy chủ kết nối không phản hồi. Kiểm tra mạng hoặc thử lại sau ít phút.')),15000);
+  peer.on('error',e=>{if(e&&e.type==='peer-unavailable'){if(n<2)retry(e);else{done=true;clearTimeout(tmo);netFail(e,code)}}else retry(e)});
+  peer.on('open',()=>{if(ST.net!==net||done)return;clearTimeout(tmo);
+   netMsg('Đang tìm phòng '+code+'...'+(n>1?' ('+n+'/3)':''),'busy');
+   const c=peer.connect(NET_PREFIX+code,{serialization:'json',reliable:true});net.conn=c;
+   c.on('iceStateChanged',st=>{if(st==='failed')retry(uerr(NET_BLOCKED))});
+   c.on('open',()=>{if(done||ST.net!==net)return;net.opened=true;clearTimeout(tmo);c.send({t:'hello',cfg:ST.me});netMsg('Đã vào phòng '+code,'ok');show('lobby');renderLobby()});
+   c.on('data',m=>{if(!m||!m.t)return;
+    if(m.t==='lobby'){net.list=m.list;renderLobby()}
+    else if(m.t==='full'){netFail(uerr('Phòng đã đầy hoặc ván đấu đã bắt đầu.'))}
+    else if(m.t==='start'){ST.myIds=[m.seat];G=m.G;rewarded=false;lastFx=0;Q=[];running=false;debtShown=null;closeModal();show('game');buildBoard();afterChange()}
+    else if(m.t==='state'){G=m.G;if($('#game').classList.contains('on'))afterChange()}
+    else if(m.t==='chat')netChatShow(m.seat,m.text)});
+   c.on('error',()=>retry());
+   c.on('close',()=>{if(ST.net!==net)return;if(net.opened){toast('Chủ phòng đã thoát');leave()}else retry()});
+   tmo=setTimeout(()=>retry(),15000)})};
+ attempt(1)}
 function startOnline(){const n=ST.net,l=lobbyList();const extra=Math.min(ST.online.extra,4-l.length);
  const seats=l.map(p=>({name:p.name,cfg:p.cfg,bot:0}));for(let i=0;i<extra;i++){const c=randCfg();seats.push({name:c.name,cfg:c,bot:ST.lvl})}
  const seen={};seats.forEach(x=>{if(seen[x.name]){x.name+=' '+(seen[x.name]+1);x.cfg=Object.assign({},x.cfg,{name:x.name})}seen[x.name]=(seen[x.name]||1)+1});
