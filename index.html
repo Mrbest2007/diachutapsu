@@ -1299,6 +1299,10 @@ const PH=[
 ['Áo Đại Bàng Đính Đá','Diamond Eagle Polo'],['Tóc Dựng Highlight Bạc','Silver-Tipped Spiky Hair'],['Quạt Giấy Hoa Sen','Lotus Paper Fan'],['Giáo Mác Tấu Hài','Silly Spear Flag'],['Kính Râm Gọng Nhỏ','Tiny Round Shades'],
 ['Ném đồ','Throw'],['VIỆT NAM • PASTEL CHIBI 3D','VIETNAM • PASTEL CHIBI 3D'],['Mã phòng, kết nối P2P','Room code, peer-to-peer'],['Cà chua chín','Ripe Tomato'],['cà chua chín','a ripe tomato'],['Hũ mắm tôm','Shrimp Paste Jar'],['hũ mắm tôm','a jar of shrimp paste'],['Dép tổ ong','Honeycomb Flip-Flop'],['dép tổ ong','a honeycomb flip-flop'],
 ['BỤP!','SPLAT!'],['THỐI QUÁ!','SO STINKY!'],['CHÁT!','SMACK!'],
+['Phòng giả lập (không cần mạng)','Simulated room (no network needed)'],['Không vào được phòng? Xem hướng dẫn','Cannot join a room? See the guide'],
+['Đang dùng iPhone/iPad? Nếu không vào được phòng, hãy tắt iCloud Private Relay và VPN, hoặc đổi qua lại giữa Wi-Fi và 4G/5G.','Using an iPhone/iPad? If you cannot join a room, turn off iCloud Private Relay and any VPN, or switch between Wi-Fi and 4G/5G.'],
+['Phòng giả lập: chơi ngay trên thiết bị này, không cần mạng','Simulated room: play right here on this device, no network needed'],
+['Phòng giả lập · chỉ chơi trên thiết bị này','Simulated room · plays on this device only'],['KHÔNG CẦN MẠNG','NO NETWORK NEEDED'],['Thử tạo phòng thật lại','Try creating a real room again'],['Phòng giả lập','Simulated room'],
 ['Đang kết nối máy chủ...','Connecting to server...'],['Phòng đã sẵn sàng','Room is ready'],['Mất kết nối máy chủ, đang kết nối lại...','Lost connection to the server, reconnecting...'],
 ['Hãy nhập đúng mã phòng 5 ký tự.','Please enter the exact 5-character room code.'],
 ['Máy chủ kết nối không phản hồi. Kiểm tra mạng hoặc thử lại sau ít phút.','The connection server is not responding. Check your network or try again in a few minutes.'],
@@ -1416,8 +1420,10 @@ function renderSetup(){const m=ST.mode;let body='';
  if(m==='online'){
   body=`${profileCard()}<div class="card"><p style="margin:0 0 10px">Hai bạn kết nối trực tiếp qua WebRTC (PeerJS), không cần máy chủ trung gian. Chủ phòng tạo mã 5 ký tự, bạn bè nhập mã để vào.</p>
   <div class="row"><button class="btn gold" data-a="hostRoom">Tạo phòng</button>
-  <input type="text" id="joinCode" maxlength="5" placeholder="Nhập mã phòng" style="max-width:190px;text-transform:uppercase" aria-label="Mã phòng" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"><button class="btn mint" data-a="joinRoom">Vào phòng</button></div>
-  ${netMsgHtml()}</div>`}
+  <input type="text" id="joinCode" maxlength="5" value="${esc(ST.lastCode||'')}" placeholder="Nhập mã phòng" style="max-width:190px;text-transform:uppercase" aria-label="Mã phòng" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"><button class="btn mint" data-a="joinRoom">Vào phòng</button></div>
+  ${netMsgHtml()}
+  <div class="row" style="margin-top:10px"><button class="btn ghost sm" data-a="simRoom">Phòng giả lập (không cần mạng)</button><button class="btn ghost sm" data-a="p2pHelp">Không vào được phòng? Xem hướng dẫn</button></div>
+  ${IS_IOS?'<div class="note" style="margin-top:8px">Đang dùng iPhone/iPad? Nếu không vào được phòng, hãy tắt iCloud Private Relay và VPN, hoặc đổi qua lại giữa Wi-Fi và 4G/5G.</div>':''}</div>`}
  const ttl={solo:'Chơi với Bot',local:'Chơi chung máy',online:'Chơi Online'}[m];
  $('#setup').innerHTML=`<div class="bar"><button class="btn ghost sm" data-a="home">← Menu</button><h2>${ttl}</h2></div>${body}`}
 
@@ -1660,7 +1666,7 @@ function playerCard(p){const own=owned(p.id);
 let PSIG='';
 function renderPlayers(){const sig=G.players.map(p=>[p.money,p.jail,p.jt,p.out,p.fc.length,p.bot,p.id===G.cur&&G.winner<0].join()).join('|')+G.own.join()+G.hs.join()+G.mort.join();if(sig===PSIG&&$('#pl').firstChild)return;PSIG=sig;const n=G.players.length,h=Math.ceil(n/2);
  $('#pl').innerHTML=G.players.slice(0,h).map(playerCard).join('');$('#pr').innerHTML=G.players.slice(h).map(playerCard).join('')}
-function renderTop(){$('#top').innerHTML=`<div class="tt">Địa Chủ Tập Sự</div><span class="chip">Lượt ${G.turnNo}</span>${ST.net?`<span class="chip">Phòng ${ST.net.code}</span>`:''}<button class="btn sm gold" data-a="rules" aria-label="Luật chơi" title="Luật chơi"><span class="tic keep" aria-hidden="true">📖</span><span class="lb">Luật chơi</span></button><button class="btn sm ghost" data-a="mute" aria-label="Âm thanh"><span class="tic" aria-hidden="true">${AUD.muted?'🔇':'🔊'}</span><span class="lb">${AUD.muted?'Âm thanh: Tắt':'Âm thanh: Bật'}</span></button><button class="btn sm ghost" data-a="quit" aria-label="Thoát"><span class="tic" aria-hidden="true">✕</span><span class="lb">Thoát</span></button><span class="row" style="gap:6px">${langChips()}</span>`}
+function renderTop(){$('#top').innerHTML=`<div class="tt">Địa Chủ Tập Sự</div><span class="chip">Lượt ${G.turnNo}</span>${ST.net?`<span class="chip">${ST.net.sim?'Phòng giả lập':'Phòng '+ST.net.code}</span>`:''}<button class="btn sm gold" data-a="rules" aria-label="Luật chơi" title="Luật chơi"><span class="tic keep" aria-hidden="true">📖</span><span class="lb">Luật chơi</span></button><button class="btn sm ghost" data-a="mute" aria-label="Âm thanh"><span class="tic" aria-hidden="true">${AUD.muted?'🔇':'🔊'}</span><span class="lb">${AUD.muted?'Âm thanh: Tắt':'Âm thanh: Bật'}</span></button><button class="btn sm ghost" data-a="quit" aria-label="Thoát"><span class="tic" aria-hidden="true">✕</span><span class="lb">Thoát</span></button><span class="row" style="gap:6px">${langChips()}</span>`}
 function renderDock(){const d=$('#dock');
  const logs=G.log.slice(-40).reverse().map(l=>`<div><span style="color:${l.c>=0?G.players[l.c].col:'#fff'}">●</span> ${esc(l.t)}</div>`).join('');
  if(G.winner>=0){d.innerHTML=`<div class="st"><b>Trận đấu kết thúc</b></div><div class="logbox dsk" style="flex:1 1 300px">${logs}</div>`;renderPopup();return}
@@ -1734,7 +1740,7 @@ function tradeItems(pid,side){const p=G.players[pid];const props=owned(pid).filt
  <div style="max-height:170px;overflow:auto">${props.length?props.map(i=>`<label class="tp"><input type="checkbox" data-side="${side}" data-f="p" value="${i}" ${TD[side].props.includes(i)?'checked':''}><span style="width:10px;height:18px;border-radius:3px;background:${T[i].g?GROUPS[T[i].g].c:'#9fb4ff'}"></span>${T[i].n}${G.mort[i]?' (thế chấp)':''}</label>`).join(''):'<div class="mut">Không có đất để trao đổi</div>'}</div>`}
 const TD={to:-1,o:{cash:0,props:[],fc:0},w:{cash:0,props:[],fc:0}};
 const tradeText=(tr)=>{const f=it=>[it.cash?money(it.cash):'',...it.props.map(i=>T[i].n),it.fc?it.fc+' thẻ ra tù':''].filter(Boolean).join(', ')||'không gì cả';return `<b>${esc(G.players[tr.from].name)}</b> đưa: ${esc(f(tr.o))}<br><b>${esc(G.players[tr.to].name)}</b> đưa: ${esc(f(tr.w))}`};
-function renderModal(){const ov=$('#ovm'),md=$('#md');if(!MD||(!G&&MD.type!=='rules')){ov.classList.remove('on');return}
+function renderModal(){const ov=$('#ovm'),md=$('#md');if(!MD||(!G&&MD.type!=='rules'&&MD.type!=='p2phelp')){ov.classList.remove('on');return}
  const m=MD;let html='',wide=false;
  if(m.type==='deed'){const i=m.data.i;html=`<h3>Thông tin ô đất</h3>${deedHTML(i)}${G.own[i]>=0?propActions(i,G.own[i]):''}<div class="row" style="justify-content:center;margin-top:10px"><button class="btn ghost" data-a="close">Đóng</button></div>`}
  if(m.type==='manage'){const pid=G.cur,p=G.players[pid];const l=owned(pid);const dbt=G.phase==='debt'&&G.debt?`<div class="prow" style="background:#ff6b8133">Cần trả <b>${money(G.debt.amt)}</b> · tiền mặt ${money(p.money)}</div>`:'';wide=true;
@@ -1755,6 +1761,14 @@ function renderModal(){const ov=$('#ovm'),md=$('#md');if(!MD||(!G&&MD.type!=='ru
  if(m.type==='quit'){html=`<h3>Rời khỏi trận?</h3><p>Ván đang chơi sẽ không được lưu.</p><div class="row" style="justify-content:flex-end"><button class="btn ghost" data-a="close">Tiếp tục chơi</button><button class="btn pink" data-a="quitYes">Rời trận</button></div>`}
  if(m.type==='win'){const w=G.players[m.data.pid];if(!rewarded){rewarded=true;FX.celebrate();AUD.play('win')}
   html=`<div class="win"><div>${avatar(w.cfg,150)}</div><h2>CHIẾN THẮNG!</h2><h3 style="color:${w.col}">${esc(w.name)}</h3><p>Trở thành Địa Chủ giàu nhất với ${money(w.money)} tiền mặt và ${owned(w.id).length} tài sản.</p><div class="row" style="justify-content:center"><button class="btn gold" data-a="again">Chơi lại</button><button class="btn" data-a="quitYes">Về menu</button></div></div>`}
+ if(m.type==='p2phelp'){wide=true;const k=m.data.kind,dg=m.data.diag;
+  const why=k==='server'?L('Không liên lạc được máy chủ ghép phòng (PeerJS). Mạng có thể đang chặn WebSocket hoặc máy chủ công cộng đang quá tải.','Could not reach the matchmaking server (PeerJS). Your network may block WebSockets or the public server may be busy.'):k==='p2p'?L('Mạng đang chặn kết nối trực tiếp (P2P/WebRTC) giữa hai thiết bị.','Your network is blocking the direct P2P (WebRTC) connection between the two devices.'):L('Nếu không vào được phòng, hãy thử các cách sau.','If you cannot join a room, try the following.');
+  const ios=IS_IOS?`<li><b>iPhone/iPad:</b> ${L('tắt iCloud Private Relay: Cài đặt > [Tên của bạn] > iCloud > Private Relay > Tắt.','turn off iCloud Private Relay: Settings > [your name] > iCloud > Private Relay > Off.')}</li><li>${L('Cài đặt > Wi-Fi > nhấn (i) cạnh mạng đang dùng > tắt "Giới hạn theo dõi địa chỉ IP". Với 4G/5G: Cài đặt > Di động > Tùy chọn dữ liệu di động.','Settings > Wi-Fi > tap (i) next to your network > turn off "Limit IP Address Tracking". For 4G/5G: Settings > Cellular > Cellular Data Options.')}</li>`:'';
+  html=`<h3>🌐 ${L('Không kết nối được P2P','P2P connection failed')}</h3><div class="mut" style="margin-bottom:8px">${why}</div><div class="rules"><ul>${ios}<li>${L('Tắt VPN và các ứng dụng chặn quảng cáo hoặc DNS riêng (Cài đặt > VPN).','Turn off any VPN and private ad or DNS blockers.')}</li><li>${L('Chuyển đổi qua lại giữa Wi-Fi và mạng di động 4G/5G rồi thử lại.','Switch between Wi-Fi and 4G/5G, then try again.')}</li><li>${L('Hai người nên dùng cùng một Wi-Fi để dễ kết nối hơn.','Both players should use the same Wi-Fi to connect more easily.')}</li><li>${L('Tải lại trang rồi tạo phòng mới.','Reload the page and create a new room.')}</li></ul></div>
+  ${dg?`<div class="box" style="white-space:pre-line">${esc(dg)}</div>`:''}
+  <div class="row" style="margin-top:10px"><button class="btn gold" data-a="p2pRetry">${L('Thử lại','Retry')}</button><button class="btn" data-a="p2pDiag">${L('Kiểm tra mạng','Test network')}</button></div>
+  <div class="grp"><b>${L('Hoặc chơi ngay không cần mạng','Or play right now without a network')}</b><div class="row"><button class="btn mint" data-a="simRoom">${L('Phòng giả lập (với Bot)','Simulated room (with bots)')}</button><button class="btn" data-a="goLocal">${L('Chơi chung máy','Pass & play')}</button></div></div>
+  <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn ghost" data-a="close">${L('Đóng','Close')}</button></div>`}
  if(m.type==='rules'){wide=true;const tabs=rulesData(),k=Math.min(m.data.tab||0,tabs.length-1),tb=tabs[k];
   html=`<h3>📖 ${L('Luật Chơi','How to Play')}</h3><div class="tabs">${tabs.map((x,i)=>`<button class="chip ${i===k?'on':''}" data-a="rulesTab" data-v="${i}">${x.ic} ${x.t}</button>`).join('')}</div><div class="rules"><div class="rh"><span class="big">${tb.ic}</span><h3 style="margin:0">${tb.t}</h3></div><ul>${tb.l.map(s=>`<li>${s}</li>`).join('')}</ul>${tb.n?`<div class="box">💡 ${tb.n}</div>`:''}</div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn gold" data-a="close">${L('Đã hiểu','Got it')}</button></div>`}
  if(md.dataset.sig===html&&ov.classList.contains('on'))return;md.dataset.sig=html;
@@ -1799,7 +1813,32 @@ function peerErrMsg(e,code){const ty=e&&e.type;
  if(ty==='webrtc'||ty==='negotiation-failed')return NET_BLOCKED;
  if(ty==='unavailable-id')return 'Mã phòng bị trùng, hãy bấm Tạo phòng lại.';
  return 'Lỗi kết nối: '+(ty||(e&&e.message)||e)}
-function netFail(err,code){netClose();show('setup');renderSetup();netMsg(err&&err.user?err.message:peerErrMsg(err,code),'err')}
+const IS_IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function netKind(e){if(!e)return '';const t=e.type,m=e.user?String(e.message):'';
+ if(t==='webrtc'||t==='negotiation-failed'||/P2P/.test(m))return 'p2p';
+ if(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed'||/PeerJS|không phản hồi/.test(m))return 'server';return ''}
+function netFail(err,code){netClose();show('setup');renderSetup();netMsg(err&&err.user?err.message:peerErrMsg(err,code),'err');
+ const k=netKind(err);if(k)openModal('p2phelp',{kind:k,code})}
+/* Phòng giả lập: không cần mạng, chỉ có bạn và Bot trên thiết bị này */
+function simRoom(){closeModal();netClose();ST.mode='online';ST.online.extra=Math.max(ST.online.extra,1);
+ ST.net={role:'host',code:genCode(),peer:null,conns:[],list:null,ready:true,sim:true};
+ netMsg('Phòng giả lập: chơi ngay trên thiết bị này, không cần mạng','ok');show('lobby');lobbySync()}
+/* Kiểm tra mạng: STUN/TURN có thông không */
+function diagIce(){return new Promise(res=>{if(!window.RTCPeerConnection)return res({err:L('Trình duyệt này không hỗ trợ WebRTC.','This browser does not support WebRTC.')});
+ const o={host:0,srflx:0,relay:0};let pc;try{pc=new RTCPeerConnection({iceServers:PEER_OPTS.config.iceServers})}catch(e){return res({err:L('Không khởi tạo được WebRTC.','Could not start WebRTC.')})}
+ let fin=false;const done=()=>{if(fin)return;fin=true;clearTimeout(to);try{pc.close()}catch(e){}res(o)};const to=setTimeout(done,6500);
+ try{pc.createDataChannel('t')}catch(e){}
+ pc.onicecandidate=e=>{if(!e.candidate)return done();const m=/ typ (host|srflx|prflx|relay)/.exec(e.candidate.candidate);if(m)o[m[1]==='prflx'?'srflx':m[1]]++};
+ pc.createOffer().then(x=>pc.setLocalDescription(x)).catch(done)})}
+async function runDiag(){if(!MD||MD.type!=='p2phelp')return;MD.data.diag=L('Đang kiểm tra...','Testing...');renderModal();const ln=[];
+ try{const c=new AbortController(),t=setTimeout(()=>c.abort(),6000);await fetch('https://0.peerjs.com/peerjs/id',{cache:'no-store',mode:'no-cors',signal:c.signal});clearTimeout(t);ln.push('✅ '+L('Máy chủ ghép phòng: truy cập được','Matchmaking server: reachable'))}
+ catch(e){ln.push('❌ '+L('Máy chủ ghép phòng: không truy cập được','Matchmaking server: unreachable'))}
+ const o=await diagIce();
+ if(o.err)ln.push('❌ '+o.err);
+ else{ln.push((o.srflx?'✅ ':'❌ ')+L('STUN (xuyên NAT): ','STUN (NAT traversal): ')+(o.srflx?L('hoạt động','working'):L('không phản hồi','no response')));
+  ln.push((o.relay?'✅ ':'⚠️ ')+L('TURN (chuyển tiếp dự phòng): ','TURN (relay fallback): ')+(o.relay?L('hoạt động','working'):L('không phản hồi','no response')));
+  ln.push(o.srflx||o.relay?L('👉 P2P có thể hoạt động. Nếu vẫn lỗi, hãy thử đổi mạng.','👉 P2P should work. If it still fails, try another network.'):L('👉 Mạng đang chặn P2P: hãy tắt Private Relay/VPN hoặc đổi mạng.','👉 Your network blocks P2P: turn off Private Relay/VPN or switch networks.'))}
+ if(MD&&MD.type==='p2phelp'){MD.data.diag=ln.join('\n');renderModal()}}
 function netClose(){const n=ST.net;if(!n)return;try{n.conns&&n.conns.forEach(c=>c.close());n.conn&&n.conn.close();n.peer&&n.peer.destroy()}catch(e){}ST.net=null}
 function netBroadcast(){const n=ST.net;if(!n||n.role!=='host'||!G)return;n.conns.forEach(c=>{if(c.open)try{c.send({t:'state',G})}catch(e){}})}
 /* hồ sơ người chơi (tên + trang phục) */
@@ -1817,12 +1856,12 @@ function lobbyList(){const n=ST.net;return n.role==='host'?[{name:ST.me.name,cfg
 function lobbySync(){const n=ST.net;if(n.role==='host'){const l=lobbyList();n.conns.forEach(c=>c.open&&c.send({t:'lobby',list:l}))}renderLobby()}
 function renderLobby(){const n=ST.net;if(!n)return;const pf=pfActive();const l=lobbyList(),host=n.role==='host';const tot=l.length+(host?Math.min(ST.online.extra,4-l.length):0);
  $('#lobby').innerHTML=`<div class="bar"><button class="btn ghost sm" data-a="quitYes">← Rời phòng</button><h2>Phòng chờ</h2></div>
- <div class="card"><div class="mut">Mã phòng (gửi cho bạn bè)</div><div class="lobbyc" id="rcode">${n.code}</div>
+ <div class="card">${n.sim?'<div class="mut">Phòng giả lập · chỉ chơi trên thiết bị này</div><div class="lobbyc" id="rcode" style="font-size:.5em">KHÔNG CẦN MẠNG</div>':'<div class="mut">Mã phòng (gửi cho bạn bè)</div><div class="lobbyc" id="rcode">'+n.code+'</div>'}
  ${netMsgHtml()}${profileCard()}<div class="seats">${l.map((p,i)=>`<div class="card seat"><div style="color:${PCOL[i]}" class="mut">${i?'Người chơi '+(i+1):'Chủ phòng'}</div>${avatar(p.cfg,90)}<b>${esc(p.name)}</b></div>`).join('')}</div>
  ${host?`<div class="grp"><b>Thêm Bot cho đủ bàn</b><div class="row">${[0,1,2].filter(k=>l.length+k<=4).map(k=>`<button class="chip ${Math.min(ST.online.extra,4-l.length)===k?'on':''}" data-a="onExtra" data-v="${k}">${k} Bot</button>`).join('')}${[1,2,3].map(k=>`<button class="chip ${ST.lvl===k?'on':''}" data-a="lvl2" data-v="${k}">${LVN[k]}</button>`).join('')}</div></div>
- <div class="row"><button class="btn gold big" data-a="startOnline" ${tot<2?'disabled':''}>Bắt đầu (${tot} người)</button></div>`:'<div class="note">Đang chờ chủ phòng bắt đầu ván đấu…</div>'}</div>`;pfRestore(pf)}
+ <div class="row"><button class="btn gold big" data-a="startOnline" ${tot<2?'disabled':''}>Bắt đầu (${tot} người)</button></div>${n.sim?'<div class="row"><button class="btn ghost sm" data-a="hostRoom">Thử tạo phòng thật lại</button><button class="btn ghost sm" data-a="goLocal">Chơi chung máy</button></div>':''}`:'<div class="note">Đang chờ chủ phòng bắt đầu ván đấu…</div>'}</div>`;pfRestore(pf)}
 const genCode=()=>Array.from({length:5},()=>CODEA[rnd(CODEA.length)]).join('');
-async function hostRoom(){if(ST.net)netClose();netMsg('Đang kết nối máy chủ...','busy');
+async function hostRoom(){ST.lastNet='host';if(ST.net)netClose();netMsg('Đang kết nối máy chủ...','busy');
  try{await loadPeer()}catch(e){return netFail(e)}
  let tries=0;
  const make=()=>{const code=genCode();let peer;try{peer=newPeer(NET_PREFIX+code)}catch(e){return netFail(e)}
@@ -1845,7 +1884,7 @@ async function hostRoom(){if(ST.net)netClose();netMsg('Đang kết nối máy ch
  make()}
 function sanitizeRemote(c){const d=defCfg(),o=Object.assign({},d,c||{});o.name=String(o.name||'Khách').slice(0,14);if(!TYPES.some(t=>t[0]===o.type))o.type='meo';SLOTS.forEach(([s])=>{if(!ITEM[o[s]])o[s]=d[s]});return o}
 async function joinRoom(){const code=($('#joinCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
- if(code.length!==5)return netMsg('Hãy nhập đúng mã phòng 5 ký tự.','err');
+ if(code.length!==5)return netMsg('Hãy nhập đúng mã phòng 5 ký tự.','err');ST.lastNet='join';ST.lastCode=code;
  if(ST.net)netClose();netMsg('Đang kết nối máy chủ...','busy');
  try{await loadPeer()}catch(e){return netFail(e)}
  let peer;try{peer=newPeer()}catch(e){return netFail(e)}
@@ -1883,7 +1922,7 @@ const H={
  reroll(){ST.botCfgs=[randCfg(),randCfg(),randCfg()];renderSetup()},nlocal(d){ST.nLocal=+d.v;renderSetup()},
  startSolo(){startGame(soloSeats(),[0])},
  startLocal(){const l=localSeats();const seen={};l.forEach(x=>{if(seen[x.name])x.name+=' '+(seen[x.name]+1);seen[x.name]=(seen[x.name]||1)+1});startGame(l,l.map((_,i)=>i))},
- hostRoom,joinRoom,startOnline,pfType(d){ST.me.type=d.v;ST.me.skin=DEFAULT_SKIN[d.v];pfRefresh()},pfSkin(d){ST.me.skin=d.v;pfRefresh()},onExtra(d){ST.online.extra=+d.v;renderLobby()},
+ hostRoom,joinRoom,startOnline,simRoom,p2pHelp(){openModal('p2phelp',{kind:'manual'})},p2pRetry(){closeModal();(ST.lastNet==='join'?joinRoom:hostRoom)()},p2pDiag(){runDiag()},goLocal(){closeModal();H.mode({v:'local'})},pfType(d){ST.me.type=d.v;ST.me.skin=DEFAULT_SKIN[d.v];pfRefresh()},pfSkin(d){ST.me.skin=d.v;pfRefresh()},onExtra(d){ST.online.extra=+d.v;renderLobby()},
  wdType(d){WD.cfg.type=d.v;WD.cfg.skin=DEFAULT_SKIN[d.v];saveCfg(WD.cfg);wdRender()},
  wdSkin(d){WD.cfg.skin=d.v;saveCfg(WD.cfg);wdRender()},
  wdHair(d){WD.cfg.hair=d.v;saveCfg(WD.cfg);wdRender()},
