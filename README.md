@@ -65,3 +65,8 @@ Các script là script thường dùng chung phạm vi toàn cục nên **thứ 
 ## Giấy phép
 
 [MIT](LICENSE)
+
+## Cấu trúc
+
+- `index.html` — bản chạy chính: **một file duy nhất** gồm Cờ Tỷ Phú + Ai Là Gián Điệp (xác nhận vote, mic nhập giọng nói, emoji biểu cảm), kèm cấu hình mạng TURN Metered cho mạng Viettel.
+- `modular/` — bản cũ của Cờ Tỷ Phú đã tách `css/` và `js/` (không gồm game Gián Điệp).
